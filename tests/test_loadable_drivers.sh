@@ -37,32 +37,29 @@ driver {
     name           = iporl
     meter_type     = WaterMeter
     default_fields = name,id,total_m3,max_flow_m3h,timestamp
-    link_modes     = T1
     detect {
         mvt = SEN,99,07
     }
     field {
         name        = totalitator
         quantity    = Volume
-        type        = NumericFieldWithExtractor
-        info        = 'The total water consumption recorded by this meter.'
-        vif_scaling = Auto
-        attributes  = ''
         match {
             measurement_type = Instantaneous
             vif_range        = Volume
+        }
+        about {
+            en = 'The total water consumption recorded by this meter.'
         }
     }
     field {
         name        = max_flowwor
         quantity    = Flow
-        type        = NumericFieldWithExtractor
-        info        = 'The maximum flow recorded during previous period.'
-        vif_scaling = Auto
-        attributes  = ''
         match {
             measurement_type = Instantaneous
             vif_range        = VolumeFlow
+        }
+        about {
+            en = 'The maximum flow recorded during previous period.'
         }
     }
 }
@@ -72,6 +69,6 @@ cat > $TEST/test_expected.txt <<EOF
 {"media":"water","meter":"iporl","name":"Hej","id":"33225544","max_flowwor_m3h":0,"totalitator_m3":123.529,"timestamp":"1111-11-11T11:11:11Z"}
 EOF
 
-$PROG --format=json 1844AE4C4455223399077A55000000_041389E20100023B0000 Hej $TEST/driver.xmq 33225544 NO_KEY > $TEST/test_output.txt 2>&1
+$PROG --format=json 1844AE4C4455223399077A55000000_041389E20100023B0000 Hej $TEST/driver.xmq 33225544 NOKEY > $TEST/test_output.txt 2>&1
 
 performCheck

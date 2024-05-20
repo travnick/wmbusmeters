@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2023 Fredrik Öhrström (gpl-3.0-or-later)
+ Copyright (C) 2023-2024 Fredrik Öhrström (gpl-3.0-or-later)
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,10 +23,25 @@
 struct DriverDynamic : public virtual MeterCommonImplementation
 {
     DriverDynamic(MeterInfo &mi, DriverInfo &di);
-    static bool load(DriverInfo *di, const string &name);
-    static XMQProceed add_detect(XMQDoc *doc, XMQNode *detect, void *dd);
-    static XMQProceed add_field(XMQDoc *doc, XMQNode *field, void *dd);
-    static XMQProceed add_match(XMQDoc *doc, XMQNode *match, void *dd);
+    ~DriverDynamic();
+    static bool load(DriverInfo *di, const string &name, const char *content);
+    static XMQProceed add_detect(XMQDoc *doc, XMQNode *detect, DriverInfo *di);
+    static XMQProceed add_use(XMQDoc *doc, XMQNode *field, DriverDynamic *dd);
+    static XMQProceed add_field(XMQDoc *doc, XMQNode *field, DriverDynamic *dd);
+    static XMQProceed add_match(XMQDoc *doc, XMQNode *match, DriverDynamic *dd);
+    static XMQProceed add_combinable(XMQDoc *doc, XMQNode *match, DriverDynamic *dd);
+
+    static XMQProceed add_lookup(XMQDoc *doc, XMQNode *lookup, DriverDynamic *dd);
+    static XMQProceed add_map(XMQDoc *doc, XMQNode *map, DriverDynamic *dd);
+
+    const string &fileName() { return file_name_; }
+
+private:
+
+    string file_name_;
+    FieldMatcher *tmp_matcher_;
+    Translate::Lookup *tmp_lookup_;
+    Translate::Rule *tmp_rule_;
 };
 
 #endif

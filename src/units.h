@@ -20,6 +20,7 @@
 
 #include<string>
 #include<vector>
+#include<cstdint>
 
 // A named quantity has a preferred unit,
 // ie Volume has m3 (cubic meters) Energy has kwh, Power has kw.
@@ -120,6 +121,7 @@ LIST_OF_QUANTITIES
     X(COUNTER,counter,"counter",Dimensionless,"counter")                \
     X(FACTOR,factor,"factor",Dimensionless,"factor")                    \
     X(NUMBER,nr,"number",Dimensionless,"number")                        \
+    X(PERCENTAGE,pct,"percentage",Dimensionless,"percentage")                  \
 
 enum class Unit
 {
@@ -294,5 +296,8 @@ bool extractUnit(const std::string &s, std::string *vname, Unit *u);
 #define X(cname,lcname,hrname,quantity,explanation) extern const SIUnit SI_##cname;
 LIST_OF_UNITS
 #undef X
+
+const char *availableQuantities();
+const char *availableUnits();
 
 #endif

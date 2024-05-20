@@ -63,6 +63,8 @@ using namespace std;
     X(NUMBER, COUNTER, {vto=vfrom;}) \
     X(FACTOR, NUMBER, {vto=vfrom;})  \
     X(NUMBER, FACTOR, {vto=vfrom;}) \
+    X(PERCENTAGE, NUMBER, {vto=vfrom;})  \
+    X(NUMBER, PERCENTAGE, {vto=vfrom;}) \
     X(UnixTimestamp,DateTimeLT, {vto=vfrom; }) \
     X(DateTimeLT,UnixTimestamp, {vto=vfrom; }) \
     X(DateLT,UnixTimestamp, {vto=vfrom; }) \
@@ -122,6 +124,7 @@ using namespace std;
     X(COUNTER,     1.0, SIExp())                                     \
     X(FACTOR,      1.0, SIExp())                                     \
     X(NUMBER,      1.0, SIExp())                                     \
+    X(PERCENTAGE,  1.0, SIExp())                                     \
     X(TXT,         1.0, SIExp())                                     \
 
 
@@ -804,4 +807,38 @@ string SIExp::str() const
     if (invalid_) r = "!"+r+"-Invalid!";
 
     return r;
+}
+
+char available_quantities_[2048];
+
+const char *availableQuantities()
+{
+    if (available_quantities_[0]) return available_quantities_;
+
+#define X(q,u) if (Quantity::q != Quantity::Unknown) {                   \
+        strcat(available_quantities_, #q); strcat(available_quantities_, "\n"); \
+        assert(strlen(available_quantities_) < 1024); }
+LIST_OF_QUANTITIES
+#undef X
+
+    // Remove last newline
+    available_quantities_[strlen(available_quantities_)-1] = 0;
+    return available_quantities_;
+}
+
+char available_units_[2048];
+
+const char *availableUnits()
+{
+    if (available_units_[0]) return available_units_;
+
+#define X(n,suffix,sn,q,ln) if (Unit::n != Unit::Unknown) {     \
+        strcat(available_units_, #suffix); strcat(available_units_, " "); \
+        assert(strlen(available_units_) < 1024); }
+LIST_OF_UNITS
+#undef X
+
+    // Remove last newline
+    available_units_[strlen(available_units_)-1] = 0;
+    return available_units_;
 }

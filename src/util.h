@@ -19,7 +19,7 @@
 #define UTIL_H
 
 #include<signal.h>
-#include<stdint.h>
+#include<cstdint>
 #include<string>
 #include<functional>
 #include<map>
@@ -42,6 +42,7 @@ typedef unsigned char uchar;
 
 enum class TestBit
 {
+    Unknown,
     Set,
     NotSet
 };
@@ -75,6 +76,7 @@ std::string safeString(std::vector<uchar> &target);
 void strprintf(std::string *s, const char* fmt, ...);
 std::string tostrprintf(const char* fmt, ...);
 std::string tostrprintf(const std::string &fmt, ...);
+bool endsWith(const std::string &str, const std::string &suffix);
 
 // Return for example: 2010-03-21
 std::string strdate(struct tm *date);
@@ -99,9 +101,16 @@ bool enableLogfile(const std::string& logfile, bool daemon);
 void disableLogfile();
 void enableSyslog();
 void error(const char* fmt, ...);
-void verbose(const char* fmt, ...);
-void trace(const char* fmt, ...);
-void debug(const char* fmt, ...);
+
+#define verbose(...) { if (isVerboseEnabled()) { verbose_int(__VA_ARGS__); } }
+void verbose_int(const char* fmt, ...);
+
+#define trace(...) { if (isTraceEnabled()) { trace_int(__VA_ARGS__); } }
+void trace_int(const char* fmt, ...);
+
+#define debug(...) { if (isDebugEnabled()) { debug_int(__VA_ARGS__); } }
+void debug_int(const char* fmt, ...);
+
 void warning(const char* fmt, ...);
 void info(const char* fmt, ...);
 void notice(const char* fmt, ...);
@@ -147,19 +156,10 @@ void setAlarmShells(std::vector<std::string> &alarm_shells);
 
 bool isValidAlias(const std::string& alias);
 bool isValidBps(const std::string& b);
-bool isValidMatchExpression(const std::string& s, bool non_compliant);
-bool isValidMatchExpressions(const std::string& s, bool non_compliant);
-bool doesIdMatchExpression(const std::string& id, std::string match_rule);
-bool doesIdMatchExpressions(const std::string& id, std::vector<std::string>& match_rules, bool *used_wildcard);
-bool doesIdsMatchExpressions(std::vector<std::string> &ids, std::vector<std::string>& match_rules, bool *used_wildcard);
-std::string toIdsCommaSeparated(std::vector<std::string> &ids);
-
-bool isValidId(const std::string& id, bool accept_non_compliant);
 
 bool isFrequency(const std::string& fq);
 bool isNumber(const std::string& fq);
 
-std::vector<std::string> splitMatchExpressions(const std::string& mes);
 // Split s into strings separated by c.
 std::vector<std::string> splitString(const std::string &s, char c);
 // Split s into strings separated by c and store inte set.
@@ -302,6 +302,11 @@ int strlen_utf8(const char *s);
 int toMfctCode(char a, char b, char c);
 
 bool is_lowercase_alnum_text(const char *text);
+
+// The language that the user expects driver and other messages in.
+const std::string &language();
+
+TestBit toTestBit(const char *s);
 
 #ifndef FUZZING
 #define FUZZING false

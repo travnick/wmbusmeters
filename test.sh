@@ -11,7 +11,7 @@ fi
 
 if ! command -v jq > /dev/null
 then
-    echo "You have to install jq !"
+    echo "You have to install jq! Try: sudo apt install jq"
     exit 1
 fi
 
@@ -30,7 +30,13 @@ if [ "$?" != "0" ]; then RC="1"; fi
 tests/test_s1_meters.sh $PROG
 if [ "$?" != "0" ]; then RC="1"; fi
 
+tests/test_non_existant_driver.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
 tests/test_mbus.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+tests/test_libmbus_secondary_address.sh $PROG
 if [ "$?" != "0" ]; then RC="1"; fi
 
 tests/test_anyid.sh $PROG
@@ -120,6 +126,18 @@ if [ "$?" != "0" ]; then RC="1"; fi
 tests/test_additional_json.sh $PROG
 if [ "$?" != "0" ]; then RC="1"; fi
 
+tests/test_addresses.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+tests/test_address_filtering.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+tests/test_address_dll.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+tests/test_identity_mode.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
 tests/test_rtlwmbus.sh $PROG
 if [ "$?" != "0" ]; then RC="1"; fi
 
@@ -166,6 +184,13 @@ if [ "$?" != "0" ]; then RC="1"; fi
 ./tests/test_rtlwmbus_timestamps.sh $PROG
 if [ "$?" != "0" ]; then RC="1"; fi
 
+if [ -s build/xmq ]
+then
+    ./build/xmq tests/generated_tests.xmq for-each /test --shell='./tests/testit.sh '$PROG' "${args}" "${telegram}" "${json}" "${fields}"'
+else
+    echo "Skipping tests/generated_tests.xmq since xmq is missing."
+fi
+
 ./tests/test_drivers.sh $PROG
 if [ "$?" != "0" ]; then RC="1"; fi
 
@@ -173,6 +198,18 @@ if [ "$?" != "0" ]; then RC="1"; fi
 if [ "$?" != "0" ]; then RC="1"; fi
 
 ./tests/test_loadable_drivers.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+./tests/test_bad_driver.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+./tests/test_metershell_env.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+./tests/test_metershell.sh $PROG
+if [ "$?" != "0" ]; then RC="1"; fi
+
+./tests/test_metershell2.sh $PROG
 if [ "$?" != "0" ]; then RC="1"; fi
 
 if [ -x ../additional_tests.sh ]

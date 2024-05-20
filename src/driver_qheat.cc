@@ -54,7 +54,7 @@ namespace
                 {
                     {
                         "ERROR_FLAGS",
-                        Translate::Type::BitToString,
+                        Translate::MapType::BitToString,
                         AlwaysTrigger, MaskBits(0xffff),
                         "OK",
                         {
@@ -85,7 +85,7 @@ namespace
             "The total energy consumption recorded by this meter.",
              DEFAULT_PRINT_PROPERTIES,
             Quantity::Energy,
-            VifScaling::Auto,
+            VifScaling::Auto, DifSignedness::Signed,
             FieldMatcher::build()
             .set(MeasurementType::Instantaneous)
             .set(VIFRange::AnyEnergyVIF)
@@ -106,7 +106,7 @@ namespace
             "The total energy consumption recorded at the last day of the previous month.",
              DEFAULT_PRINT_PROPERTIES,
             Quantity::Energy,
-            VifScaling::Auto,
+            VifScaling::Auto, DifSignedness::Signed,
             FieldMatcher::build()
             .set(MeasurementType::Instantaneous)
             .set(StorageNr(17))
@@ -128,7 +128,7 @@ namespace
             "The total energy consumption recorded at the last day of the previous year.",
             DEFAULT_PRINT_PROPERTIES,
             Quantity::Energy,
-            VifScaling::Auto,
+            VifScaling::Auto, DifSignedness::Signed,
             FieldMatcher::build()
             .set(MeasurementType::Instantaneous)
             .set(StorageNr(1))
@@ -160,8 +160,11 @@ namespace
             vector<uchar> v;
             auto entry = it->second.second;
             hex2bin(entry.value.substr(0, 8), &v);
-            t->addId(v.begin());
-            std::string info = "*** " + entry.value.substr(0, 8) + " tpl-id (" + t->ids.back() + ")";
+            // FIXME PROBLEM
+            Address a;
+            a.id = tostrprintf("%02x%02x%02x%02x", v[3], v[2], v[1], v[0]);
+            t->addresses.push_back(a);
+            std::string info = "*** " + entry.value.substr(0, 8) + " tpl-id (" + t->addresses.back().id + ")";
             t->addSpecialExplanation(entry.offset, 4, KindOfData::CONTENT, Understanding::FULL, info.c_str());
 
             v.clear();

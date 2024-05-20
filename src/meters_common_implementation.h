@@ -54,28 +54,13 @@ struct StringField
     StringField(std::string v, FieldInfo *f) : value(v), field_info(f) {}
 };
 
-enum class FieldType
-{
-    NumericFieldWithExtractor,
-    NumericFieldWithCalculator,
-    NumericFieldWithCalculatorAndMatcher,
-    NumericField,
-    StringFieldWithExtractor,
-    StringFieldWithExtractorAndLookup,
-    StringField,
-    Unknown
-};
-
-FieldType toFieldType(const char *s);
-const char *toString(FieldType ft);
-
 struct MeterCommonImplementation : public virtual Meter
 {
     int index();
     void setIndex(int i);
     string bus();
-    vector<string>& ids();
-    string idsc();
+    vector<AddressExpression>& addressExpressions();
+    IdentityMode identityMode();
     vector<FieldInfo> &fieldInfos();
     vector<string> &extraConstantFields();
     string name();
@@ -100,7 +85,6 @@ struct MeterCommonImplementation : public virtual Meter
     static bool isTelegramForMeter(Telegram *t, Meter *meter, MeterInfo *mi);
     MeterKeys *meterKeys();
 
-//    MeterCommonImplementation(MeterInfo &mi, string driver);
     MeterCommonImplementation(MeterInfo &mi, DriverInfo &di);
 
     ~MeterCommonImplementation() = default;
@@ -110,9 +94,11 @@ protected:
     void triggerUpdate(Telegram *t);
     void setExpectedELLSecurityMode(ELLSecurityMode dsm);
     void setExpectedTPLSecurityMode(TPLSecurityMode tsm);
-    void addShell(std::string cmdline);
+    void addShellMeterAdded(std::string cmdline);
+    void addShellMeterUpdated(std::string cmdline);
     void addExtraConstantField(std::string ecf);
-    std::vector<std::string> &shellCmdlines();
+    std::vector<std::string> &shellCmdlinesMeterAdded();
+    std::vector<std::string> &shellCmdlinesMeterUpdated();
     std::vector<std::string> &meterExtraConstantFields();
     void setMeterType(MeterType mt);
     void addLinkMode(LinkMode lm);
@@ -125,6 +111,7 @@ protected:
         PrintProperties print_properties, // Should this be printed by default in fields,json and hr.
         Quantity vquantity,     // Value belongs to this quantity, this quantity determines the default unit.
         VifScaling vif_scaling, // How should any Vif value be scaled.
+        DifSignedness dif_signedness, // Should we override the default signed assumption for binary values?
         FieldMatcher matcher,
         Unit display_unit = Unit::Unknown, // If specified use this unit for the json field instead instead of the default unit.
         double scale = 1.0); // A hard coded extra scale factor. Useful for manufacturer specific values.
@@ -176,7 +163,11 @@ protected:
     // Override for mbus meters that need to be queried and likewise for C2/T2 wmbus-meters.
     void poll(shared_ptr<BusManager> bus);
     bool handleTelegram(AboutTelegram &about, vector<uchar> frame,
-                        bool simulated, string *id, bool *id_match, Telegram *out_analyzed = NULL);
+                        bool simulated, std::vector<Address> *addresses,
+                        bool *id_match, Telegram *out_analyzed = NULL);
+    void createMeterEnv(string id,
+                        vector<string> *envs,
+                        vector<string> *more_json); // Add this json "key"="value" strings.
     void printMeter(Telegram *t,
                     string *human_readable,
                     string *fields, char separator,
@@ -214,9 +205,7 @@ protected:
 
     std::string decodeTPLStatusByte(uchar sts);
 
-    void addOptionalCommonFields(string fields);
-    void addOptionalFlowRelatedFields(string fields);
-    void addHCARelatedFields(string fields);
+    bool addOptionalLibraryFields(string fields);
 
     vector<string> &selectedFields() { return selected_fields_; }
     void setSelectedFields(vector<string> &f) { selected_fields_ = f; }
@@ -233,14 +222,15 @@ private:
     ELLSecurityMode expected_ell_sec_mode_ {};
     TPLSecurityMode expected_tpl_sec_mode_ {};
     string name_;
-    vector<string> ids_;
-    string idsc_;
+    vector<AddressExpression> address_expressions_;
+    IdentityMode identity_mode_;
     vector<function<void(Telegram*,Meter*)>> on_update_;
     int num_updates_ {};
     time_t datetime_of_update_ {};
     time_t datetime_of_poll_ {};
     LinkModeSet link_modes_ {};
-    vector<string> shell_cmdlines_;
+    vector<string> shell_cmdlines_added_;
+    vector<string> shell_cmdlines_updated_;
     vector<string> extra_constant_fields_;
     time_t poll_interval_ {};
     Translate::Lookup mfct_tpl_status_bits_ = NoLookup;
